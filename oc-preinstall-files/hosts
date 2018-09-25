@@ -1,0 +1,29 @@
+#bare minimum hostfile
+
+[OSEv3:children]
+masters
+nodes
+etcd
+
+[OSEv3:vars]
+ansible_user=root
+# if your target hosts are Fedora uncomment this
+#ansible_python_interpreter=/usr/bin/python3
+openshift_deployment_type=origin
+openshift_release="3.10"
+openshift_master_default_subdomain=apps.fcg.ai
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+openshift_master_htpasswd_file=/etc/origin/openshiftpwd
+openshift_portal_net=172.30.0.0/16
+openshift_docker_insecure_registries=172.30.0.0/16
+# localhost likely doesn't meet the minimum requirements
+openshift_disable_check=disk_availability,memory_availability,docker_image_availability,docker_storage
+
+
+[masters]
+oc-master-[1:2]	
+[etcd]
+oc-master-[1:2]	
+[nodes]
+oc-master-[1:2]	 openshift_node_group_name="node-config-master" openshift_schedulable=True
+oc-node-[1:2]	openshift_node_group_name="node-config-infra" openshift_schedulable=True

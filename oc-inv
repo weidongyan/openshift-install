@@ -1,0 +1,7 @@
+[masters]
+oc-master-1
+oc-master-2
+
+[nodes]
+oc-node-1
+oc-node-2

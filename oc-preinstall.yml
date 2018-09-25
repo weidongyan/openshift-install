@@ -1,0 +1,109 @@
+---
+- name: preparation for openshift installation
+  hosts: all
+  remote_user: root
+  vars:
+    - openshift_ver: origin39
+
+
+  tasks:
+    - name: Create /root/.ssh
+      file:
+        path: /root/.ssh
+        mode: 0700
+        owner: root
+        group: root
+        state: directory
+      when: inventory_hostname in groups['masters']
+
+    - name: ssh login parameter
+      copy:
+        content: |
+          Host *
+            StrictHostKeyChecking no
+        dest: /root/.ssh/config
+      when: inventory_hostname in groups['masters']
+
+    - name: copy supplier's ssh private key to all hosts
+      copy:
+        src: /root/.ssh/id_rsa
+        dest: /root/.ssh/id_rsa
+        mode: 0600
+        owner: root
+        group: root
+
+    - name: copy supplier's ssh public key to all hosts
+      copy:
+        src: /root/.ssh/id_rsa.pub
+        dest: /root/.ssh/id_rsa.pub
+        mode: 0644
+        owner: root
+        group: root
+
+    - name: Deploy ssh key to root at all nodes
+      authorized_key:
+        user: root
+        key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+    - name: stop and disable firewalld
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
+
+    - name: disable Selinux
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=permissive'
+
+    - name: install supporting package
+      yum:
+        name:
+          - epel-release
+          - centos-release-openshift-{{ openshift_ver }}
+          - wget
+          - git
+          - net-tools
+          - bind-utils
+          - iptables-services
+          - kexec-tools
+          - docker
+        state: latest
+    - name: Install Openshift tools
+      yum:
+        name: 
+          - ansible-2.6.4-1.el7
+          - atomic-openshift-utils
+        state: latest
+      when: inventory_hostname in groups['masters']
+    
+    - name: customize docker-storage-setup file
+      copy:
+        content: |
+          DEVS=/dev/sdb
+          VG=docker-vg
+          SETUP_LVM_THIN_POOL=yes
+        dest: /etc/sysconfig/docker-storage-setup
+        backup: yes
+
+    - name: verify existence of docker storage pool
+      stat:
+        path: /dev/docker-vg/docker-pool
+      register: docker_vg_status
+
+    - name: Run docker-storage-setup
+      command: /usr/bin/docker-storage-setup
+      when: docker_vg_status.stat.islnk is not defined
+
+    - name: Start and enable docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+    
+    - name: Copy openshift ansible hosts to master
+      copy:
+        src: oc-preinstall-files/hosts
+        dest: /etc/ansible/
+        backup: yes
