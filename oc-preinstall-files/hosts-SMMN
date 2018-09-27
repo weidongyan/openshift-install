@@ -1,0 +1,32 @@
+[masters]
+oc-master-1.fcg.ai
+
+[etcd]
+oc-master-1.fcg.ai
+
+[nodes]
+oc-master-1.fcg.ai openshift_schedulable=true
+oc-node-1.fcg.ai openshift_schedulable=true openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
+
+[nfs]
+oc-master-1.fcg.ai
+
+[OSEv3:children]
+masters
+nodes
+etcd
+nfs
+
+[OSEv3:vars]
+ansible_user=root
+openshift_deployment_type=origin
+openshift_release=v3.9
+
+openshift_master_default_subdomain=apps.fcg.ai
+openshift_disable_check=disk_availability,memory_availability,docker_image_availability,docker_storage
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+openshift_master_htpasswd_file=/root/openshift-passwd
+
+
+debug_level=2
+

@@ -25,7 +25,6 @@
         block: |
           resolv-file=/etc/dnsmasq.upstream.conf
           strict-order
-          no-resolv
         create: yes
 
     - name: create upstream record
@@ -45,11 +44,11 @@
       blockinfile:
         path: /etc/hosts
         block: |
-          192.168.1.80 suppiler.fcg.ai suppiler
-          192.168.1.81 oc-master-1.fcg.ai oc-master-1
-          192.168.1.82 oc-master-2.fcg.ai oc-master-2
-          192.168.1.83 oc-node-1.fcg.ai oc-node-1
-          192.168.1.84 oc-node-2.fcg.ai oc-node-2
+          192.168.5.80 suppiler.fcg.ai suppiler
+          192.168.5.81 oc-master-1.fcg.ai oc-master-1
+          192.168.5.82 oc-master-2.fcg.ai oc-master-2
+          192.168.5.83 oc-node-1.fcg.ai oc-node-1
+          192.168.5.84 oc-node-2.fcg.ai oc-node-2
       notify:
        - restart_dnsmasq
 

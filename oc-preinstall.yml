@@ -3,7 +3,8 @@
   hosts: all
   remote_user: root
   vars:
-    - openshift_ver: origin39
+    - openshift_ver: 39
+    - plan: ALLINONE
 
 
   tasks:
@@ -22,6 +23,12 @@
           Host *
             StrictHostKeyChecking no
         dest: /root/.ssh/config
+      when: inventory_hostname in groups['masters']
+
+    - name: config vim for yaml
+      copy:
+        content: "autocmd FileType yaml setlocal ai ts=2 sw=2 et"
+        dest: /root/.vimrc
       when: inventory_hostname in groups['masters']
 
     - name: copy supplier's ssh private key to all hosts
@@ -51,22 +58,24 @@
         state: stopped
         enabled: no
 
-    - name: disable Selinux
+    - name: enable Selinux
       lineinfile:
         path: /etc/selinux/config
         regexp: '^SELINUX='
-        line: 'SELINUX=permissive'
+        line: 'SELINUX=enforcing'
 
     - name: install supporting package
       yum:
         name:
           - epel-release
-          - centos-release-openshift-{{ openshift_ver }}
+          - centos-release-openshift-origin{{ openshift_ver }}
           - wget
           - git
           - net-tools
           - bind-utils
           - iptables-services
+          - bridge-utils
+          - bash-completion
           - kexec-tools
           - docker
         state: latest
@@ -104,6 +113,36 @@
     
     - name: Copy openshift ansible hosts to master
       copy:
-        src: oc-preinstall-files/hosts
-        dest: /etc/ansible/
+        src: oc-preinstall-files/hosts-{{ openshift_ver }}-{{ plan }}
+        dest: /etc/ansible/hosts
         backup: yes
+      ignore_errors: yes
+      when: inventory_hostname in groups['masters']
+
+    - name: copy admin password file to master
+      copy:
+        src: oc-preinstall-files/openshift-passwd
+        dest: /root/
+      when: inventory_hostname in groups['masters']
+
+    - name: Create the first setup script
+      copy:
+        content: "#!/bin/bash \n ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml"
+        dest: /root/first.sh
+        mode: 0755
+      when: inventory_hostname in groups['masters']
+
+    - name: Create the second setup script
+      copy:
+        content: "#!/bin/bash \n ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml"
+        dest: /root/second.sh
+        mode: 0755
+      when: inventory_hostname in groups['masters']
+
+    - name: setup domestic mirror website 
+      lineinfile:
+        path: /usr/share/ansible/openshift-ansible/roles/openshift_repos/templates/CentOS-OpenShift-Origin{{ openshift_ver }}.repo.j2
+        regexp: '^baseurl=http://mirror.centos.org'
+        line: 'baseurl=http://mirrors.aliyun.com/centos/7/paas/x86_64/openshift-origin{{ openshift_ver }}/'
+        backup: yes
+      when: inventory_hostname in groups['masters']
