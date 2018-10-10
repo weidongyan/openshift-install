@@ -1,0 +1,36 @@
+---
+- name: setup a local docker registry
+  hosts: localhost
+  remote_user: root
+
+  tasks:
+    - name: install docker
+      yum:
+        name: docker
+        state: latest
+    - name: customize docker-storage-setup file
+      copy:
+        content: |
+          DEVS=/dev/sdb
+          VG=docker-vg
+          SETUP_LVM_THIN_POOL=yes
+        dest: /etc/sysconfig/docker-storage-setup
+        backup: yes
+
+    - name: verify existence of docker storage pool
+      stat:
+        path: /dev/docker-vg/docker-pool
+      register: docker_vg_status
+
+    - name: Run docker-storage-setup
+      command: /usr/bin/docker-storage-setup
+      when: docker_vg_status.stat.islnk is not defined
+
+    - name: Start and enable docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+
+    

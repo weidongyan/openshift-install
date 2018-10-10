@@ -3,8 +3,8 @@
   hosts: all
   remote_user: root
   vars:
-    - openshift_ver: 39
-    - plan: ALLINONE
+    - openshift_ver: 310
+    - plan: SMMN
 
 
   tasks:
@@ -64,6 +64,17 @@
         regexp: '^SELINUX='
         line: 'SELINUX=enforcing'
 
+    - name: Modify sshd configuration file
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^GSSAPIAuthentication'
+        line: 'GSSAPIAuthentication no'
+
+    - name: Modify sshd configuration file2
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'UseDNS no'
+
     - name: install supporting package
       yum:
         name:
@@ -82,8 +93,8 @@
     - name: Install Openshift tools
       yum:
         name: 
-          - ansible-2.6.4-1.el7
-          - atomic-openshift-utils
+          - ansible-2.6.5-1.el7
+          - openshift-ansible*
         state: latest
       when: inventory_hostname in groups['masters']
     
@@ -134,15 +145,27 @@
 
     - name: Create the second setup script
       copy:
-        content: "#!/bin/bash \n ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml"
+        content: |
+          #!/bin/bash
+          sed -i 's/mirror.centos.org/mirrors.aliyun.com/g' /etc/yum.repos.d/CentOS-OpenShift-Origin*
+          yum makecache
+          ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
         dest: /root/second.sh
         mode: 0755
       when: inventory_hostname in groups['masters']
 
-    - name: setup domestic mirror website 
+    - name: enable ansible log
       lineinfile:
-        path: /usr/share/ansible/openshift-ansible/roles/openshift_repos/templates/CentOS-OpenShift-Origin{{ openshift_ver }}.repo.j2
-        regexp: '^baseurl=http://mirror.centos.org'
-        line: 'baseurl=http://mirrors.aliyun.com/centos/7/paas/x86_64/openshift-origin{{ openshift_ver }}/'
+        path: /etc/ansible/ansible.cfg
+        regexp: '^#log_path'
+        line: 'log_path = /var/log/ansible.log'
         backup: yes
       when: inventory_hostname in groups['masters']
+
+
+
+  handlers:
+    - name: restart_sshd
+      service:
+        name: sshd
+        state: restarted

@@ -1,0 +1,12 @@
+---
+- name: update os exclude kernel and centos-release
+  hosts: all
+  remote_user: root
+  
+
+  tasks:
+    - name: update os exclude kernal and centos-release
+      yum:
+        name: '*'
+        state: latest
+        exclude: kernel*,centos-release*

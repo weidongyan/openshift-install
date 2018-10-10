@@ -1,0 +1,33 @@
+#bare minimum hostfile
+
+[OSEv3:children]
+masters
+nodes
+etcd
+
+[OSEv3:vars]
+ansible_user=root
+# if your target hosts are Fedora uncomment this
+#ansible_python_interpreter=/usr/bin/python3
+openshift_deployment_type=origin
+openshift_release="3.10"
+openshift_master_default_subdomain=apps.fcg.ai
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+openshift_master_htpasswd_file=/root/openshift-passwd
+openshift_portal_net=172.30.0.0/16
+openshift_docker_insecure_registries=172.30.0.0/16
+# localhost likely doesn't meet the minimum requirements
+openshift_docker_additional_registries=registry.fcg.ai:5000
+openshift_docker_insecure_registries=registry.fcg.ai:5000,docker.io
+
+#openshift_docker_blocked_registries=docker.io
+osm_etcd_image=registry.fcg.ai:5000/coreos/etcd:v3.2.22
+[masters]
+oc-master-1	
+[etcd]
+oc-master-1	
+[nodes]
+oc-master-1	 openshift_node_group_name="node-config-master" openshift_schedulable=True containerized=true
+oc-node-2	openshift_node_group_name="node-config-infra" openshift_schedulable=True containerized=true
+oc-node-1	openshift_node_group_name="node-config-compute" openshift_schedulable=True containerized=true
+oc-node-3	openshift_node_group_name="node-config-compute" openshift_schedulable=True containerized=true
