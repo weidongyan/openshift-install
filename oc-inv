@@ -1,10 +1,10 @@
 [masters]
-oc-master-1
-#oc-master-2
+#oc-master-1
+oc-master-2
 #oc-master-3
 
 [nodes]
-#oc-node-1
-#oc-node-2
-#oc-node-3
-oc-master-3
+oc-node-1
+oc-node-2
+oc-node-3
+#oc-master-3

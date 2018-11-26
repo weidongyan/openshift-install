@@ -11,7 +11,7 @@
         name: 
           - dnsmasq
           - bind-utils
-        state: latest
+        state: present
 
     - name: enable dnsmsq.d
       blockinfile:
@@ -25,7 +25,9 @@
         block: |
           resolv-file=/etc/dnsmasq.upstream.conf
           strict-order
-          address=/.apps.fcg.ai/192.168.5.86
+          address=/.apps.fcg.ai/192.168.5.84
+          address=/.fcg.cn/192.168.5.84
+          address=/.test.fcg.ai/192.168.5.86
         create: yes
       notify:
          - restart_dnsmasq
@@ -61,6 +63,7 @@
           192.168.5.15 ceph-mon-3.fcg.ai ceph-mon-3
           192.168.5.16 ceph-node-3.fcg.ai ceph-node-3
           192.168.5.80 registry.fcg.ai registry
+          192.168.1.78 xy.fcg.cn
 
       notify:
        - restart_dnsmasq

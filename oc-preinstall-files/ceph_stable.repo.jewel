@@ -1,0 +1,6 @@
+[ceph_stable]
+baseurl = http://mirrors.aliyun.com/ceph/rpm-jewel/el7/$basearch
+gpgcheck = 1
+gpgkey = https://mirrors.aliyun.com/ceph/keys/release.asc
+name = Ceph Stable repo
+

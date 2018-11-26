@@ -1,0 +1,24 @@
+---
+- name: install ceph-common pacage for all oc nodes
+  hosts: all
+  remote_user: root
+  vars:
+    - cephVersion: jewel
+
+  tasks:
+    - name: copy local ceph repo file to all nodes
+      copy:
+        src: oc-preinstall-files/ceph_stable.repo.{{ cephVersion }}
+        dest: /etc/yum.repos.d/ceph_stable.repo
+    - name: install ceph-common
+      yum:
+        name: ceph-common
+        state: latest
+
+    - name: copy configurate file to master
+      copy:
+        src: persistent-ceph
+        dest: /root/
+      when: inventory_hostname in groups['masters']
+
+

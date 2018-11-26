@@ -3,8 +3,8 @@
   hosts: all
   remote_user: root
   vars:
-    - openshift_ver: 310
-    - plan: SMMN
+    - openshift_ver: 311
+    - plan: ALLINONE
 
 
   tasks:
@@ -93,9 +93,9 @@
     - name: Install Openshift tools
       yum:
         name: 
-          - ansible-2.6.5-1.el7
+          #- ./ansible-2.6.5-1.el7.ans.noarch.rpm
           - openshift-ansible*
-        state: latest
+        state: present
       when: inventory_hostname in groups['masters']
     
     - name: customize docker-storage-setup file
